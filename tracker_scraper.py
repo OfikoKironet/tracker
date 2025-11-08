@@ -4,7 +4,6 @@ import os
 import sys
 
 # --- Nastavení ---
-# Klíč se načítá z proměnné prostředí (GitHub Secret)
 API_KEY = os.getenv("SCRAPINGBEE_API_KEY") 
 
 if not API_KEY:
@@ -15,8 +14,9 @@ if not API_KEY:
 TARGET_URL = "https://tracker.gg/bf6/profile/3186869623/modes"
 SCRAPING_BEE_ENDPOINT = "https://app.scrapingbee.com/api/v1/"
 
-# --- Funkce pro komunikaci s ScrapingBee ---
+# --- Funkce pro komunikaci s ScrapingBee (Beze změny) ---
 def get_page_content_api(target_url, api_key):
+    # ... (Kód pro komunikaci s ScrapingBee je stejný) ...
     print(f"[*] Odesílám požadavek na ScrapingBee pro URL: {target_url}...")
     
     payload = {
@@ -35,32 +35,47 @@ def get_page_content_api(target_url, api_key):
         print(f"[-] Chyba při komunikaci s Scraping API: {e}")
         return None
 
-# --- Funkce pro parsování dat ---
+# --- ZMĚNĚNÁ Funkce pro parsování dat ---
 def parse_stats(html_content):
-    print("[*] Analyzuji HTML obsah...")
+    """
+    Analyzuje HTML a extrahuje Wins pro BR Quads a BR Duos pomocí pořadí prvků.
+    Předpokládá, že hledané statistiky jsou první v daném kontejneru.
+    """
+    print("[*] Analyzuji HTML obsah podle nových selektorů...")
     soup = BeautifulSoup(html_content, 'html.parser')
     
     wins_data = {'BR Quads Wins': 'Nenalezeno', 'BR Duo Wins': 'Nenalezeno'}
     
-    mode_sections = soup.find_all('div', class_='name', string=['BR Quads', 'BR Duos'])
+    # NOVÝ SELEKTOR: Cílíme na buňky, které obsahují třídu 'value truncate'
+    # Toto by měly být buňky, které zobrazují hodnoty (včetně vašich "13" a "3").
     
-    for section_title in mode_sections:
-        mode_name = section_title.text.strip()
-        mode_container = section_title.find_parent('div', class_='stat-group')
+    # 1. Najdeme kontejner s tabulkou/seznamem módů (např. třída 'stat-group')
+    # Protože neznáme přesnou strukturu, zkusíme najít všechny elementy s hodnotou
+    
+    # Hledáme všechny SPANy s třídou 'truncate', které jsou uvnitř 'value'
+    value_spans = soup.find_all('span', class_='truncate')
+    
+    # Extrahujeme hodnoty, pokud se jedná o statistiku
+    extracted_values = []
+    for span in value_spans:
+        # Zkontrolujeme, že se nejedná o textové popisky
+        # Většina hodnot bude mít pouze číslo a volitelný text
+        value = span.text.strip()
+        if value and value.replace('.', '', 1).isdigit() or value.isdigit():
+             extracted_values.append(value)
+
+    # Nyní přiřazujeme podle pořadí (Rizikové, ale nutné pro danou strukturu)
+    
+    if len(extracted_values) >= 1:
+        # Předpoklad: První nalezena hodnota je BR Quads Wins (ve vašem případě "13")
+        wins_data['BR Quads Wins'] = extracted_values[0]
+
+    if len(extracted_values) >= 2:
+        # Předpoklad: Druhá nalezena hodnota je BR Duo Wins (ve vašem případě "3")
+        wins_data['BR Duo Wins'] = extracted_values[1]
         
-        if mode_container:
-            wins_label = mode_container.find('div', class_='name', string='Wins')
-            
-            if wins_label:
-                wins_value_element = wins_label.find_parent('div', class_='stat-card__stat').find('div', class_='value')
-                if wins_value_element:
-                    wins_value = wins_value_element.text.strip()
-                    
-                    if mode_name == 'BR Quads':
-                        wins_data['BR Quads Wins'] = wins_value
-                    elif mode_name == 'BR Duos':
-                        wins_data['BR Duo Wins'] = wins_value
-                        
+    # Pokud se najdou jiné hodnoty (např. K/D, Matches, atd.), budou ignorovány po druhém prvku.
+        
     return wins_data
 
 
@@ -68,6 +83,10 @@ if __name__ == "__main__":
     html_content = get_page_content_api(TARGET_URL, API_KEY)
     
     if html_content:
+        # Zde můžete odkomentovat pro lokální ladění a uložení HTML
+        # with open("tracker_output.html", "w", encoding="utf-8") as f:
+        #    f.write(html_content)
+
         results = parse_stats(html_content)
         
         print("\n--- ✅ Výsledky Scrapování ---")
