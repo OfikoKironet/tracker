@@ -1,0 +1,27 @@
+name: Run Tracker Scraper
+
+# Spustí workflow ručně z karty Actions
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest # Běží na virtuálním stroji s Linuxem
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Stáhne kód repozitáře
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt # Nainstaluje potřebné knihovny
+        
+      - name: Run Scraper Script
+        # Vloží uložený Secret do proměnné prostředí pro skript
+        env:
+          SCRAPINGBEE_API_KEY: ${{ secrets.SCRAPINGBEE_API_KEY }}
+        run: python tracker_scraper.py # Spustí hlavní skript
