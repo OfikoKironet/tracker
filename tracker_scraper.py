@@ -5,7 +5,7 @@ import sys
 
 # --- Nastavení ---
 # Klíč se načítá z proměnné prostředí (GitHub Secret)
-API_KEY = os.getenv("SCRAPINGBEE_API_KEY") 
+API_KEY = os.getenv("JUU51KANCHA3PSWDAIGYADVEES9EXV0K5XVUE6X86GHNNIS48DT03NMB66QI0HJBIHLOKAU8PVSYM4B0") 
 
 if not API_KEY:
     # Ukončí skript, pokud klíč není nastaven (na GitHub Actions by neměl být problém)
