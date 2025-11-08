@@ -5,10 +5,10 @@ import sys
 
 # --- Nastavení ---
 # Klíč se načítá z proměnné prostředí (GitHub Secret)
-API_KEY = os.getenv("JUU51KANCHA3PSWDAIGYADVEES9EXV0K5XVUE6X86GHNNIS48DT03NMB66QI0HJBIHLOKAU8PVSYM4B0") 
+API_KEY = os.getenv("SCRAPINGBEE_API_KEY") 
 
 if not API_KEY:
-    # Ukončí skript, pokud klíč není nastaven (na GitHub Actions by neměl být problém)
+    # Tato chyba je v pořádku, pokud je skript spuštěn bez Secretu, ale v Actions to má fungovat.
     print("CHYBA: API klíč SCRAPINGBEE_API_KEY nebyl nalezen v proměnném prostředí!")
     sys.exit(1)
 
